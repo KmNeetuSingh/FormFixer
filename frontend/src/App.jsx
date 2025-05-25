@@ -57,7 +57,8 @@ function App() {
     accessibility: false,
   });
 
-  const BASE_URL = process.env.REACT_APP_API_BASE_URL;
+  const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
 
   useEffect(() => {
     document.body.style.backgroundColor = '#0f172a';
