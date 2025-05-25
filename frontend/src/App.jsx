@@ -50,13 +50,14 @@ function App() {
   const [report, setReport] = useState([]);
   const [schema, setSchema] = useState(null);
   const [violations, setViolations] = useState([]);
-  const [fixedHtml, setFixedHtml] = useState('');  // <-- New state for fixed HTML
-
+  const [fixedHtml, setFixedHtml] = useState('');
   const [loading, setLoading] = useState({
     analyze: false,
     schema: false,
     accessibility: false,
   });
+
+  const BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
   useEffect(() => {
     document.body.style.backgroundColor = '#0f172a';
@@ -70,13 +71,11 @@ function App() {
   const analyzeForm = async () => {
     setLoading((prev) => ({ ...prev, analyze: true }));
     try {
-      const res = await axios.post('http://localhost:5000/api/analyze', { html });
+      const res = await axios.post(`${BASE_URL}/analyze`, { html });
       setReport(res.data.report || []);
-      setFixedHtml(res.data.fixedHtml || '');   // <-- Set fixedHtml here
+      setFixedHtml(res.data.fixedHtml || '');
     } catch (err) {
-      toast.error(`Failed to analyze form${err?.message ? `: ${err.message}` : ''}`, {
-        position: 'top-right',
-      });
+      toast.error(`Failed to analyze form${err?.message ? `: ${err.message}` : ''}`, TOAST_OPTIONS);
     } finally {
       setLoading((prev) => ({ ...prev, analyze: false }));
     }
@@ -85,12 +84,10 @@ function App() {
   const generateSchema = async () => {
     setLoading((prev) => ({ ...prev, schema: true }));
     try {
-      const res = await axios.post('http://localhost:5000/api/schema', { html });
+      const res = await axios.post(`${BASE_URL}/schema`, { html });
       setSchema(res.data.schema);
     } catch (err) {
-      toast.error(`Failed to generate schema${err?.message ? `: ${err.message}` : ''}`, {
-        position: 'top-right',
-      });
+      toast.error(`Failed to generate schema${err?.message ? `: ${err.message}` : ''}`, TOAST_OPTIONS);
     } finally {
       setLoading((prev) => ({ ...prev, schema: false }));
     }
@@ -99,12 +96,10 @@ function App() {
   const checkAccessibility = async () => {
     setLoading((prev) => ({ ...prev, accessibility: true }));
     try {
-      const res = await axios.post('http://localhost:5000/api/accessibility', { html });
+      const res = await axios.post(`${BASE_URL}/accessibility`, { html });
       setViolations(res.data.violations);
     } catch (err) {
-      toast.error(`Failed to check accessibility${err?.message ? `: ${err.message}` : ''}`, {
-        position: 'top-right',
-      });
+      toast.error(`Failed to check accessibility${err?.message ? `: ${err.message}` : ''}`, TOAST_OPTIONS);
     } finally {
       setLoading((prev) => ({ ...prev, accessibility: false }));
     }
@@ -113,7 +108,6 @@ function App() {
   return (
     <div className="max-w-4xl mx-auto p-8 bg-[#0f172a] text-gray-100 min-h-screen font-sans">
       <ToastContainer />
-
       <h1 className="text-4xl font-extrabold mb-8 text-blue-400 flex items-center gap-3">
         🛠️ FormFixer
       </h1>
@@ -131,29 +125,37 @@ function App() {
           onClick={analyzeForm}
           disabled={loading.analyze}
           aria-busy={loading.analyze}
-          className={`flex-1 min-w-[120px] py-3 rounded text-white font-semibold transition
-            ${loading.analyze ? 'bg-blue-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:ring-blue-500'}
-          `}
+          className={`flex-1 min-w-[120px] py-3 rounded text-white font-semibold transition ${
+            loading.analyze
+              ? 'bg-blue-400 cursor-not-allowed'
+              : 'bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:ring-blue-500'
+          }`}
         >
           {loading.analyze ? 'Analyzing...' : 'Analyze'}
         </button>
+
         <button
           onClick={generateSchema}
           disabled={loading.schema}
           aria-busy={loading.schema}
-          className={`flex-1 min-w-[120px] py-3 rounded text-white font-semibold transition
-            ${loading.schema ? 'bg-green-400 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700 focus:ring-4 focus:ring-green-500'}
-          `}
+          className={`flex-1 min-w-[120px] py-3 rounded text-white font-semibold transition ${
+            loading.schema
+              ? 'bg-green-400 cursor-not-allowed'
+              : 'bg-green-600 hover:bg-green-700 focus:ring-4 focus:ring-green-500'
+          }`}
         >
           {loading.schema ? 'Generating...' : 'Generate Schema'}
         </button>
+
         <button
           onClick={checkAccessibility}
           disabled={loading.accessibility}
           aria-busy={loading.accessibility}
-          className={`flex-1 min-w-[120px] py-3 rounded text-white font-semibold transition
-            ${loading.accessibility ? 'bg-purple-400 cursor-not-allowed' : 'bg-purple-700 hover:bg-purple-800 focus:ring-4 focus:ring-purple-600'}
-          `}
+          className={`flex-1 min-w-[120px] py-3 rounded text-white font-semibold transition ${
+            loading.accessibility
+              ? 'bg-purple-400 cursor-not-allowed'
+              : 'bg-purple-700 hover:bg-purple-800 focus:ring-4 focus:ring-purple-600'
+          }`}
         >
           {loading.accessibility ? 'Checking...' : 'Accessibility'}
         </button>
@@ -185,9 +187,7 @@ function App() {
                 <h2 className="text-xl font-semibold text-cyan-400">🛠️ Fixed HTML</h2>
                 <CopyButton text={fixedHtml} label="Fixed HTML" />
               </div>
-              <pre
-                className="overflow-x-auto max-h-64 text-sm bg-[#111827] p-4 rounded border border-gray-600 whitespace-pre-wrap"
-              >
+              <pre className="overflow-x-auto max-h-64 text-sm bg-[#111827] p-4 rounded border border-gray-600 whitespace-pre-wrap">
                 {fixedHtml}
               </pre>
             </section>
@@ -199,9 +199,7 @@ function App() {
                 <h2 className="text-xl font-semibold text-green-300">🧩 JSON Schema</h2>
                 <CopyButton text={JSON.stringify(schema, null, 2)} label="JSON Schema" />
               </div>
-              <pre
-                className="overflow-x-auto max-h-64 text-sm bg-[#111827] p-4 rounded border border-gray-600 whitespace-pre-wrap"
-              >
+              <pre className="overflow-x-auto max-h-64 text-sm bg-[#111827] p-4 rounded border border-gray-600 whitespace-pre-wrap">
                 {JSON.stringify(schema, null, 2)}
               </pre>
             </section>
